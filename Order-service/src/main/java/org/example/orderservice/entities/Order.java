@@ -1,11 +1,13 @@
 package org.example.orderservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.orderservice.enums.OrderStatus;
+import org.example.orderservice.enums.StatutColis;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,10 +35,20 @@ public class Order {
 
     private Double totalAmount;
 
+    private String adresseLivraison;
+
+    private String trackingNumber;
+
+
+    @Enumerated(EnumType.STRING)
+    private StatutColis statut;
+
     @OneToMany(
             mappedBy = "order",
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @JsonManagedReference
+
     private List<OrderItem> items = new ArrayList<>();
 }

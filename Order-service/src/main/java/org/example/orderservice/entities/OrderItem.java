@@ -1,5 +1,6 @@
 package org.example.orderservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +22,7 @@ public class OrderItem {
     // Relation interne au microservice
     @ManyToOne(optional = false)
     @JoinColumn(name = "order_id")
+    @JsonBackReference
     private Order order;
 
     // id du produit (vient de Product-service)
