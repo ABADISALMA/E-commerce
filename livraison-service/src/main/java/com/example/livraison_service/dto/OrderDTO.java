@@ -8,4 +8,7 @@ public class OrderDTO {
     private String trackingNumber;
     private String adresseLivraison;
     private String statut;
+
+    private Long userId;
+    private Double totalAmount;
 }

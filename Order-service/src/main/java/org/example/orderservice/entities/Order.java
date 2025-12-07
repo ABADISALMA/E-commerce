@@ -1,6 +1,7 @@
 package org.example.orderservice.entities;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +24,7 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("idOrder")
     private Long id;
 
     // id du client (vient de User-service)
@@ -33,6 +35,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    @Column(name = "total_amount")
     private Double totalAmount;
 
     private String adresseLivraison;
