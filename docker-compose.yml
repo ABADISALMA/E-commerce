@@ -1,0 +1,112 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: ecommerce
+      POSTGRES_DB: ecommerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [backend]
+
+  discovery:
+    build: ./discovery
+    container_name: discovery
+    ports:
+      - "8761:8761"
+    networks: [backend]
+
+  config:
+    build: ./config
+    container_name: config
+    ports:
+      - "8888:8888"
+    depends_on:
+      - discovery
+    networks: [backend]
+
+  gateway:
+    build: ./getway-service
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - discovery
+      - config
+    networks: [backend]
+
+  auth:
+    build: ./auth-service
+    container_name: auth
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - postgres
+      - discovery
+      - config
+    networks: [backend]
+
+  order:
+    build: ./Order-service
+    container_name: order
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - postgres
+      - discovery
+      - config
+    networks: [backend]
+
+  payment:
+    build: ./Payment-service
+    container_name: payment
+    ports:
+      - "8083:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - postgres
+      - discovery
+      - config
+    networks: [backend]
+
+  product:
+    build: ./Product-service
+    container_name: product
+    ports:
+      - "8084:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - postgres
+      - discovery
+      - config
+    networks: [backend]
+
+  livraison:
+    build: ./livraison-service
+    container_name: livraison
+    ports:
+      - "8085:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - postgres
+      - discovery
+      - config
+    networks: [backend]
+
+networks:
+  backend:
+
+volumes:
+  pgdata:

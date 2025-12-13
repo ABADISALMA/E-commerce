@@ -5,6 +5,7 @@ import org.example.authservice.dtos.LoginRequest;
 import org.example.authservice.dtos.RegisterRequest;
 import org.example.authservice.entities.User;
 import org.example.authservice.security.JwtUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -130,35 +131,38 @@ public class AuthController {
      * ✅ PROFILE - Récupère les infos de l'utilisateur connecté
      */
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile() {
+    public ResponseEntity<?> getProfile(Authentication authentication) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-            if (authentication == null || !authentication.isAuthenticated()) {
-                System.err.println("❌ No authentication found in SecurityContext");
-                return ResponseEntity.status(401)
-                        .body(Map.of("error", "❌ Not authenticated"));
+            if (authentication == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "❌ No authentication found (JWT manquant ou invalide)"));
             }
 
-            System.out.println("✅ Authentication found: " + authentication.getName());
-            System.out.println("🔍 Authorities: " + authentication.getAuthorities());
+            // Ici on ne caste plus en UserDetails directement
+            Object principal = authentication.getPrincipal();
 
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String username = userDetails.getUsername();
+            String username;
 
-            User user = userService.findByUsername(username);
+            if (principal instanceof UserDetails userDetails) {
+                username = userDetails.getUsername();
+            } else {
+                // Dans ta config actuelle, ce sera un String => ok
+                username = principal.toString();
+            }
 
-            Map<String, Object> profile = new HashMap<>();
-            profile.put("id", user.getId());
-            profile.put("username", user.getUsername());
-            profile.put("email", user.getEmail());
-            profile.put("role", user.getRole().name());
+            // TODO: récupérer ton user depuis la BDD si tu veux plus d'infos
+            // Exemple :
+            // UserEntity user = userRepository.findByUsername(username);
 
-            return ResponseEntity.ok(profile);
+            Map<String, Object> body = new HashMap<>();
+            body.put("username", username);
+            body.put("message", "Profil récupéré avec succès via JWT");
+            // body.put("roles", authentication.getAuthorities()); // si tu veux ajouter les rôles
+
+            return ResponseEntity.ok(body);
+
         } catch (Exception e) {
-            System.err.println("❌ Error in getProfile: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.status(500)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "❌ Error retrieving profile: " + e.getMessage()));
         }
     }
