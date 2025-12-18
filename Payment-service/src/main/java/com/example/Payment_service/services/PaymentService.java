@@ -52,28 +52,29 @@ public class PaymentService {
         } catch (HttpClientErrorException e) {
             System.out.println("❌ Erreur HTTP lors de l'appel à ORDER-SERVICE:");
             System.out.println("   - Code: " + e.getStatusCode());
+            System.out.println("   - Body: " + e.getResponseBodyAsString());
             System.out.println("   - Message: " + e.getMessage());
-            throw new IllegalArgumentException("Order ID " + orderId + " n'existe pas ou inaccessible.");
+            throw new IllegalArgumentException(
+                    "Order Service Error (" + e.getStatusCode() + "): " + e.getResponseBodyAsString());
 
         } catch (ResourceAccessException e) {
             System.out.println("❌ Impossible de joindre ORDER-SERVICE:");
             System.out.println("   - Message: " + e.getMessage());
-            throw new IllegalArgumentException("Service de commandes indisponible.");
+            throw new IllegalArgumentException("Service de commandes indisponible (Connection refused).");
 
         } catch (Exception e) {
-            System.out.println("❌ Erreur inattendue:");
+            System.out.println("❌ Erreur inattendue dans PaymentService:");
             System.out.println("   - Type: " + e.getClass().getName());
             System.out.println("   - Message: " + e.getMessage());
             e.printStackTrace();
-            throw new IllegalArgumentException("Erreur lors de la vérification de la commande.");
+            throw new RuntimeException("Erreur interne lors du traitement du paiement: " + e.getMessage());
         }
 
         // ✅ 2. Vérifier que la commande n'est pas déjà payée ou annulée
         if (!order.getStatus().equals("CREATED")) {
             System.out.println("❌ Statut invalide: " + order.getStatus());
             throw new IllegalStateException(
-                    "Paiement impossible : la commande est déjà " + order.getStatus()
-            );
+                    "Paiement impossible : la commande est déjà " + order.getStatus());
         }
 
         // ✅ 3. Vérifier le montant
@@ -82,8 +83,7 @@ public class PaymentService {
             System.out.println("   - Attendu: " + order.getTotalAmount() + " DH");
             System.out.println("   - Reçu: " + amount + " DH");
             throw new IllegalArgumentException(
-                    "Montant invalide. Attendu: " + order.getTotalAmount() + " DH, Reçu: " + amount + " DH"
-            );
+                    "Montant invalide. Attendu: " + order.getTotalAmount() + " DH, Reçu: " + amount + " DH");
         }
 
         // ✅ 4. Vérifier que la stratégie de paiement existe
@@ -114,7 +114,8 @@ public class PaymentService {
             } catch (Exception e) {
                 System.out.println("⚠️ Erreur lors de la mise à jour du statut:");
                 System.out.println("   - " + e.getMessage());
-                // Le paiement est enregistré mais le statut de la commande n'a pas été mis à jour
+                // Le paiement est enregistré mais le statut de la commande n'a pas été mis à
+                // jour
             }
         }
 
