@@ -20,7 +20,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
     private final UserService userService;
@@ -64,45 +63,34 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            // ✅ LOG 1: Check what we received
-            System.out.println("🔍 Login attempt for user: " + request.getUsername());
+            System.out.println("🔍 Login attempt for email: " + request.getEmail());
 
-            // ✅ LOG 2: Check if user exists in database
-            User user = null;
+            // 1️⃣ Trouver l'utilisateur par EMAIL
+            User user;
             try {
-                user = userService.findByUsername(request.getUsername());
-                System.out.println("✅ User found in database: " + user.getUsername());
-                System.out.println("🔍 User role: " + user.getRole());
-                System.out.println("🔍 Password in DB starts with: " + user.getPassword().substring(0, 10) + "...");
+                user = userService.findByEmail(request.getEmail());
+                System.out.println("✅ User found: " + user.getUsername());
             } catch (Exception e) {
-                System.err.println("❌ User not found in database: " + request.getUsername());
+                System.err.println("❌ User not found with email: " + request.getEmail());
                 return ResponseEntity.status(401)
                         .body(Map.of("error", "❌ User not found"));
             }
 
-            // ✅ LOG 3: Attempt authentication
-            System.out.println("🔍 Attempting Spring Security authentication...");
-
+            // 2️⃣ Authentifier avec le USERNAME interne
             try {
                 authManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
-                                request.getUsername(),
+                                user.getUsername(),   // ⚠️ IMPORTANT
                                 request.getPassword()
                         )
                 );
                 System.out.println("✅ Authentication successful!");
             } catch (BadCredentialsException e) {
-                System.err.println("❌ Bad credentials: " + e.getMessage());
-
-                // ✅ Manual password check for debugging
-                boolean manualCheck = userService.checkPassword(request.getPassword(), user.getPassword());
-                System.out.println("🔍 Manual password check result: " + manualCheck);
-
                 return ResponseEntity.status(401)
                         .body(Map.of("error", "❌ Invalid password"));
             }
 
-            // ✅ Génération du token JWT
+            // 3️⃣ Générer le JWT
             String token = jwtUtil.generateToken(
                     user.getUsername(),
                     user.getRole().name(),
@@ -110,22 +98,19 @@ public class AuthController {
                     user.getId()
             );
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("username", user.getUsername());
-            response.put("role", user.getRole().name());
-            response.put("email", user.getEmail());
-
-            System.out.println("✅ Login successful, token generated");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of(
+                    "token", token,
+                    "username", user.getUsername(),
+                    "email", user.getEmail(),
+                    "role", user.getRole().name()
+            ));
 
         } catch (Exception e) {
-            System.err.println("❌ Unexpected error during login: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(401)
-                    .body(Map.of("error", "❌ Invalid credentials: " + e.getMessage()));
+                    .body(Map.of("error", "❌ Invalid credentials"));
         }
     }
+
 
     /**
      * ✅ PROFILE - Récupère les infos de l'utilisateur connecté

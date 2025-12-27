@@ -88,6 +88,12 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    public User findByEmail(String email) {
+        return repo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
+
     // ✅ Vérifier un mot de passe brut/encodé
     public boolean checkPassword(String raw, String encoded) {
         return encoder.matches(raw, encoded);

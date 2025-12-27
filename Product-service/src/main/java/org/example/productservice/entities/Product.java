@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "products")
 @AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Builder
 public class Product {
@@ -30,7 +31,13 @@ public class Product {
 
     private Boolean active;
 
-    public Product() {}
+    // ✅ nouveaux champs (comme ton mockProducts)
+    private String image;
 
+    private Double rating;
 
+    private Integer reviews;
+
+    public void setStock(int i) {
+    }
 }

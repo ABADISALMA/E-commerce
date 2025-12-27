@@ -46,6 +46,11 @@ public class ProductService {
         existing.setCategory(updated.getCategory());
         existing.setActive(updated.getActive());
 
+        // ✅ nouveaux champs
+        existing.setImage(updated.getImage());
+        existing.setRating(updated.getRating());
+        existing.setReviews(updated.getReviews());
+
         return productRepository.save(existing);
     }
 

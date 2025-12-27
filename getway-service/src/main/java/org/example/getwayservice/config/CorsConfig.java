@@ -1,11 +1,12 @@
 package org.example.getwayservice.config;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+
+import java.util.List;
 
 @Configuration
 public class CorsConfig {
@@ -14,10 +15,12 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.addAllowedOriginPattern("*"); // Autorise Angular
-        config.addAllowedHeader("*");        // Autorise tous les headers (Authorization, Content-Type…)
-        config.addAllowedMethod("*");        // GET, POST, PUT, DELETE…
-        config.setAllowCredentials(true);    // Autorise cookies / tokens
+        // Origin exact (pas "*") car allowCredentials=true
+        config.setAllowedOrigins(List.of("http://localhost:4200"));
+
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
