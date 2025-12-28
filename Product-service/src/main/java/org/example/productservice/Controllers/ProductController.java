@@ -51,7 +51,7 @@ public class ProductController {
         Path filePath = uploadPath.resolve(fileName);
         Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        String imageUrl = "/org/example/productservice/services/uploads/" + fileName;
+        String imageUrl = "/uploads/" + fileName;
 
         Product product = new Product();
         product.setName(name);
@@ -107,7 +107,7 @@ public class ProductController {
             Path filePath = uploadPath.resolve(fileName);
             Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            p.setImage("/org/example/productservice/services/uploads/" + fileName);
+            p.setImage("/uploads/" + fileName);
         }
 
         return productService.update(id, p);
