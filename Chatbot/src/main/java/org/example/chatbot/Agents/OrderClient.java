@@ -1,5 +1,6 @@
 package org.example.chatbot.Agents;
 
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -11,11 +12,12 @@ public class OrderClient {
 
     private final WebClient webClient;
 
-    public OrderClient(WebClient.Builder lbBuilder) {
-        this.webClient = lbBuilder.baseUrl("http://ORDER-SERVICE").build();
+    // IMPORTANT : ce Builder doit être @LoadBalanced (via WebClientConfig)
+    public OrderClient(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.baseUrl("http://order-service").build();
     }
 
-    // ✅ GET /orders/by-user/{userId}  (pour "mes commandes")
+    // ✅ GET /orders/by-user/{userId}
     public Mono<String> getOrdersByUser(Long userId, String authHeader) {
         return webClient.get()
                 .uri("/orders/by-user/{userId}", userId)
@@ -25,9 +27,12 @@ public class OrderClient {
                     }
                 })
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError,
+                        r -> Mono.error(new RuntimeException("ORDER_4XX_FORBIDDEN_OR_BAD_REQUEST")))
+                .onStatus(HttpStatusCode::is5xxServerError,
+                        r -> Mono.error(new RuntimeException("ORDER_5XX_SERVICE_DOWN")))
                 .bodyToMono(String.class)
-                .timeout(Duration.ofSeconds(5))
-                .onErrorResume(e -> Mono.just("{\"error\":\"ORDER_SERVICE_DOWN_OR_FORBIDDEN\"}"));
+                .timeout(Duration.ofSeconds(5));
     }
 
     // ✅ GET /orders/by-id/{id}
@@ -40,9 +45,12 @@ public class OrderClient {
                     }
                 })
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError,
+                        r -> Mono.error(new RuntimeException("ORDER_NOT_FOUND_OR_FORBIDDEN")))
+                .onStatus(HttpStatusCode::is5xxServerError,
+                        r -> Mono.error(new RuntimeException("ORDER_5XX_SERVICE_DOWN")))
                 .bodyToMono(String.class)
-                .timeout(Duration.ofSeconds(5))
-                .onErrorResume(e -> Mono.just("{\"error\":\"ORDER_NOT_FOUND_OR_FORBIDDEN\"}"));
+                .timeout(Duration.ofSeconds(5));
     }
 
     // ✅ GET /orders/tracking/{trackingNumber}
@@ -55,8 +63,11 @@ public class OrderClient {
                     }
                 })
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError,
+                        r -> Mono.error(new RuntimeException("ORDER_NOT_FOUND_OR_FORBIDDEN")))
+                .onStatus(HttpStatusCode::is5xxServerError,
+                        r -> Mono.error(new RuntimeException("ORDER_5XX_SERVICE_DOWN")))
                 .bodyToMono(String.class)
-                .timeout(Duration.ofSeconds(5))
-                .onErrorResume(e -> Mono.just("{\"error\":\"ORDER_NOT_FOUND_OR_FORBIDDEN\"}"));
+                .timeout(Duration.ofSeconds(5));
     }
 }

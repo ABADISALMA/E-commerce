@@ -7,7 +7,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
+
     List<Order> findByUserId(Long userId);
+
     Optional<Order> findByTrackingNumber(String trackingNumber);
 
+    boolean existsByTrackingNumber(String trackingNumber);
 }

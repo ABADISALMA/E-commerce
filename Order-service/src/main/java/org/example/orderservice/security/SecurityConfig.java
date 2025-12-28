@@ -14,7 +14,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
-@EnableMethodSecurity  // ✅ Ajouter ceci
+@EnableMethodSecurity // ✅ Ajouter ceci
 
 public class SecurityConfig {
 
@@ -47,20 +47,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/orders/all")
                         .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
 
-                        // ✅ PUT - Modifier le statut : ADMIN, SUPERADMIN seulement
+                        // ✅ PUT - Modifier le statut : USER, ADMIN, SUPERADMIN
                         .requestMatchers(HttpMethod.PUT, "/orders/update-status/**")
-                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
+                        .hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_SUPERADMIN")
 
                         // ✅ DELETE - Supprimer : ADMIN, SUPERADMIN seulement
                         .requestMatchers(HttpMethod.DELETE, "/orders/delete/**")
                         .hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
 
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 
 }

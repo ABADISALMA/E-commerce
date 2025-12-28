@@ -22,8 +22,9 @@ import java.util.Optional;
 public class ProductController {
 
     private final ProductService productService;
-    @Value("${file.upload-dir}")
+    @Value("${file.upload-dir:./uploads}")
     private String uploadDir;
+
 
 
     public ProductController(ProductService productService) {
@@ -50,7 +51,7 @@ public class ProductController {
         Path filePath = uploadPath.resolve(fileName);
         Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        String imageUrl = "/uploads/" + fileName;
+        String imageUrl = "/org/example/productservice/services/uploads/" + fileName;
 
         Product product = new Product();
         product.setName(name);
@@ -106,7 +107,7 @@ public class ProductController {
             Path filePath = uploadPath.resolve(fileName);
             Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            p.setImage("/uploads/" + fileName);
+            p.setImage("/org/example/productservice/services/uploads/" + fileName);
         }
 
         return productService.update(id, p);

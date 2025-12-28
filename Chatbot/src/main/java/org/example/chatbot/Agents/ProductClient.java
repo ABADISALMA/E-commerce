@@ -1,5 +1,6 @@
 package org.example.chatbot.Agents;
 
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -11,11 +12,11 @@ public class ProductClient {
 
     private final WebClient webClient;
 
-    public ProductClient(WebClient.Builder lbBuilder) {
-        this.webClient = lbBuilder.baseUrl("http://PRODUCT-SERVICE").build();
+    // IMPORTANT : ce Builder doit être celui @LoadBalanced (via WebClientConfig)
+    public ProductClient(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.baseUrl("http://product-service").build();
     }
 
-    // ✅ GET /products
     public Mono<String> getAllProductsJson(String authHeader) {
         return webClient.get()
                 .uri("/products")
@@ -25,12 +26,14 @@ public class ProductClient {
                     }
                 })
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError,
+                        r -> Mono.error(new RuntimeException("PRODUCT_4XX_FORBIDDEN_OR_BAD_REQUEST")))
+                .onStatus(HttpStatusCode::is5xxServerError,
+                        r -> Mono.error(new RuntimeException("PRODUCT_5XX_SERVICE_DOWN")))
                 .bodyToMono(String.class)
-                .timeout(Duration.ofSeconds(5))
-                .onErrorResume(e -> Mono.just("{\"error\":\"PRODUCT_SERVICE_DOWN_OR_FORBIDDEN\"}"));
+                .timeout(Duration.ofSeconds(5));
     }
 
-    // ✅ GET /products/{id}
     public Mono<String> getProductById(Long id, String authHeader) {
         return webClient.get()
                 .uri("/products/{id}", id)
@@ -40,8 +43,11 @@ public class ProductClient {
                     }
                 })
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError,
+                        r -> Mono.error(new RuntimeException("PRODUCT_NOT_FOUND_OR_FORBIDDEN")))
+                .onStatus(HttpStatusCode::is5xxServerError,
+                        r -> Mono.error(new RuntimeException("PRODUCT_5XX_SERVICE_DOWN")))
                 .bodyToMono(String.class)
-                .timeout(Duration.ofSeconds(5))
-                .onErrorResume(e -> Mono.just("{\"error\":\"PRODUCT_NOT_FOUND_OR_FORBIDDEN\"}"));
+                .timeout(Duration.ofSeconds(5));
     }
 }

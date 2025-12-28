@@ -28,7 +28,7 @@ public class LivraisonController {
         return livraisonService.suivreColis(trackingNumber, principal.getUserId()); // ✅ MODIFIÉ
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPERADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER','ROLE_ADMIN', 'ROLE_SUPERADMIN')")
     @GetMapping("/suivi-position/{trackingNumber}")
     public TrackingResponseDTO suivreColisAvecPosition(
             @PathVariable String trackingNumber,

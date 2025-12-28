@@ -3,6 +3,7 @@ package org.example.orderservice;
 import org.example.orderservice.entities.Order;
 import org.example.orderservice.entities.OrderItem;
 import org.example.orderservice.enums.OrderStatus;
+import org.example.orderservice.enums.StatutColis;
 import org.example.orderservice.repositories.OrderRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -23,12 +24,10 @@ public class OrderServiceApplication {
         SpringApplication.run(OrderServiceApplication.class, args);
     }
 
-
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
-
 
     @Bean
     CommandLineRunner initDatabase(OrderRepository orderRepository) {
@@ -41,13 +40,15 @@ public class OrderServiceApplication {
                     .userId(1L)
                     .orderDate(LocalDateTime.now())
                     .status(OrderStatus.CREATED)
-                    .totalAmount(0.0)
+                    .statut(StatutColis.EN_PREPARATION)
+                    .adresseLivraison("Casablanca, Maroc")
+                    .trackingNumber("TRK-0001")
                     .build();
 
             List<OrderItem> items1 = new ArrayList<>();
 
             OrderItem item11 = OrderItem.builder()
-                    .order(order1)       // très important !
+                    .order(order1)
                     .productId(1L)
                     .quantity(2)
                     .unitPrice(1299.99)
@@ -66,19 +67,20 @@ public class OrderServiceApplication {
             items1.add(item12);
             order1.setItems(items1);
 
-            double total1 = items1.stream()
-                    .mapToDouble(OrderItem::getLineTotal)
-                    .sum();
-            order1.setTotalAmount(total1);
+            order1.setTotalAmount(
+                    items1.stream().mapToDouble(OrderItem::getLineTotal).sum()
+            );
 
-            orderRepository.save(order1); // ⇐ ça sauve Order + OrderItems
+            orderRepository.save(order1);
 
             // ===== Commande 2 =====
             Order order2 = Order.builder()
                     .userId(2L)
                     .orderDate(LocalDateTime.now())
                     .status(OrderStatus.PAID)
-                    .totalAmount(0.0)
+                    .statut(StatutColis.EN_COURS_DE_LIVRAISON)
+                    .adresseLivraison("Rabat, Maroc")
+                    .trackingNumber("TRK-0002")
                     .build();
 
             List<OrderItem> items2 = new ArrayList<>();
@@ -103,15 +105,19 @@ public class OrderServiceApplication {
             items2.add(item22);
             order2.setItems(items2);
 
-            double total2 = items2.stream()
-                    .mapToDouble(OrderItem::getLineTotal)
-                    .sum();
-            order2.setTotalAmount(total2);
+            order2.setTotalAmount(
+                    items2.stream().mapToDouble(OrderItem::getLineTotal).sum()
+            );
 
             orderRepository.save(order2);
 
             orderRepository.findAll().forEach(o ->
-                    System.out.println("Order ID=" + o.getId() + " total=" + o.getTotalAmount())
+                    System.out.println(
+                            "Order ID=" + o.getId() +
+                                    " | tracking=" + o.getTrackingNumber() +
+                                    " | statut=" + o.getStatut() +
+                                    " | total=" + o.getTotalAmount()
+                    )
             );
         };
     }
